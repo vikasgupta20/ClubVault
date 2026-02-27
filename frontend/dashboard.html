@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — Zero-Trust Vault</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/animations.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- ═══════════ NAV ═══════════ -->
+    <nav class="navbar glass-card">
+        <div class="nav-brand">
+            <i class="fas fa-shield-halved"></i>
+            <span>ZT Vault</span>
+        </div>
+        <div class="nav-links">
+            <a href="/dashboard" class="nav-link active"><i class="fas fa-columns"></i> Dashboard</a>
+            <a href="/host" class="nav-link" id="hostLink"><i class="fas fa-crown"></i> Host Panel</a>
+        </div>
+        <div class="nav-right">
+            <span class="user-badge" id="userBadge"><i class="fas fa-user"></i> <span id="navUsername"></span></span>
+            <button class="theme-toggle" id="themeToggle" title="Toggle theme"><i class="fas fa-moon"></i></button>
+            <button class="btn btn-glass btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </nav>
+
+    <!-- ═══════════ DASHBOARD CONTENT ═══════════ -->
+    <main class="dashboard-main">
+        <!-- Stats Row -->
+        <div class="stats-row animate-fade-up">
+            <div class="stat-card glass-card hover-lift">
+                <div class="stat-icon blue"><i class="fas fa-folder-open"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value" id="statProjects">0</span>
+                    <span class="stat-label">My Projects</span>
+                </div>
+            </div>
+            <div class="stat-card glass-card hover-lift">
+                <div class="stat-icon green"><i class="fas fa-key"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value" id="statActiveTokens">0</span>
+                    <span class="stat-label">Active Tokens</span>
+                </div>
+            </div>
+            <div class="stat-card glass-card hover-lift">
+                <div class="stat-icon orange"><i class="fas fa-clock"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value" id="statPending">0</span>
+                    <span class="stat-label">Pending Requests</span>
+                </div>
+            </div>
+            <div class="stat-card glass-card hover-lift">
+                <div class="stat-icon purple"><i class="fas fa-shield-halved"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value" id="statHosted">0</span>
+                    <span class="stat-label">Hosted Projects</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Two Column Layout -->
+        <div class="dashboard-grid">
+            <!-- Left: Browse Projects -->
+            <section class="section glass-card animate-fade-up delay-1">
+                <div class="section-header">
+                    <h2><i class="fas fa-compass"></i> Browse Projects</h2>
+                    <button class="btn btn-glass btn-sm" onclick="loadProjects()"><i
+                            class="fas fa-sync-alt"></i></button>
+                </div>
+                <div class="project-list" id="projectList">
+                    <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+                </div>
+            </section>
+
+            <!-- Right: My Access Requests -->
+            <section class="section glass-card animate-fade-up delay-2">
+                <div class="section-header">
+                    <h2><i class="fas fa-clipboard-list"></i> My Access Requests</h2>
+                    <button class="btn btn-glass btn-sm" onclick="loadMyRequests()"><i
+                            class="fas fa-sync-alt"></i></button>
+                </div>
+                <div class="request-list" id="myRequestList">
+                    <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Active Token Section with Countdown -->
+        <section class="section glass-card animate-fade-up delay-3" id="activeTokenSection" style="display:none;">
+            <div class="section-header">
+                <h2><i class="fas fa-key"></i> Active Access Tokens</h2>
+            </div>
+            <div id="activeTokens"></div>
+        </section>
+
+        <!-- Credentials Viewer -->
+        <section class="section glass-card animate-fade-up delay-3" id="credentialsSection" style="display:none;">
+            <div class="section-header">
+                <h2><i class="fas fa-vault"></i> Project Credentials</h2>
+                <button class="btn btn-glass btn-sm" onclick="closeCredentials()"><i class="fas fa-times"></i>
+                    Close</button>
+            </div>
+            <div id="credentialsList"></div>
+        </section>
+    </main>
+
+    <!-- ═══════════ ACCESS REQUEST MODAL ═══════════ -->
+    <div class="modal-overlay" id="requestModal">
+        <div class="modal glass-card animate-scale-in">
+            <button class="modal-close" onclick="closeRequestModal()"><i class="fas fa-times"></i></button>
+            <h3><i class="fas fa-paper-plane"></i> Request Access</h3>
+            <p class="modal-subtitle" id="requestProjectName">Project Name</p>
+            <form onsubmit="submitAccessRequest(event)">
+                <input type="hidden" id="requestProjectId">
+                <div class="form-group">
+                    <label><i class="fas fa-key"></i> Permissions</label>
+                    <select id="requestPermissions">
+                        <option value="read">Read Only</option>
+                        <option value="read,write">Read & Write</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-clock"></i> Duration (minutes)</label>
+                    <input type="range" id="requestDuration" min="5" max="120" value="60"
+                        oninput="updateDurationLabel(this.value)">
+                    <span class="range-label" id="durationLabel">60 minutes</span>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full" id="submitRequestBtn">
+                    <i class="fas fa-paper-plane"></i> Submit Request
+                </button>
+                <div class="form-message" id="requestMsg"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ═══════════ CHATBOT WIDGET ═══════════ -->
+    <div class="chatbot-fab" id="chatbotFab" onclick="toggleChatbot()">
+        <i class="fas fa-robot"></i>
+    </div>
+    <div class="chatbot-panel glass-card" id="chatbotPanel">
+        <div class="chatbot-header">
+            <h4><i class="fas fa-robot"></i> Vault Assistant</h4>
+            <button onclick="toggleChatbot()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="chatbot-messages" id="chatMessages">
+            <div class="chat-msg bot">
+                <p>👋 How can I help you?</p>
+            </div>
+        </div>
+        <form class="chatbot-input" onsubmit="sendChatMessage(event)">
+            <input type="text" id="chatInput" placeholder="Ask me anything..." autocomplete="off">
+            <button type="submit"><i class="fas fa-paper-plane"></i></button>
+        </form>
+    </div>
+
+    <script src="/static/theme.js"></script>
+    <script src="/static/app.js"></script>
+    <script>
+        // ── Auth Guard ──
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        if (!token || !user) { window.location.href = '/'; }
+        document.getElementById('navUsername').textContent = user?.username || '';
+
+        // ── Load Dashboard Data ──
+        async function loadDashboard() {
+            await Promise.all([loadStats(), loadProjects(), loadMyRequests()]);
+        }
+
+        async function loadStats() {
+            try {
+                const res = await apiGet('/api/stats');
+                document.getElementById('statProjects').textContent = res.member_projects || 0;
+                document.getElementById('statActiveTokens').textContent = res.my_active_tokens || 0;
+                document.getElementById('statPending').textContent = res.pending_requests || 0;
+                document.getElementById('statHosted').textContent = res.hosted_projects || 0;
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadProjects() {
+            try {
+                const res = await apiGet('/api/projects');
+                const container = document.getElementById('projectList');
+                if (!res.projects?.length) {
+                    container.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><p>No projects found</p></div>';
+                    return;
+                }
+                container.innerHTML = res.projects.map(p => `
+                    <div class="project-card glass-card-inner hover-lift">
+                        <div class="project-info">
+                            <h4>${escapeHtml(p.project_name)}</h4>
+                            <p class="text-muted">${escapeHtml(p.description || 'No description')}</p>
+                            <div class="project-meta">
+                                <span><i class="fas fa-user"></i> ${escapeHtml(p.host_username)}</span>
+                                <span><i class="fas fa-users"></i> ${p.member_count} members</span>
+                            </div>
+                        </div>
+                        <div class="project-actions">
+                            ${p.host_id !== user.id ? `<button class="btn btn-primary btn-sm" onclick="openRequestModal(${p.id}, '${escapeHtml(p.project_name)}')"><i class="fas fa-paper-plane"></i> Request Access</button>` : '<span class="badge badge-host">Your Project</span>'}
+                            <button class="btn btn-glass btn-sm" onclick="viewCredentials(${p.id})"><i class="fas fa-vault"></i> View Vault</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                document.getElementById('projectList').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Failed to load</p></div>';
+            }
+        }
+
+        async function loadMyRequests() {
+            try {
+                const res = await apiGet('/api/access-requests/my');
+                const container = document.getElementById('myRequestList');
+                const tokenSection = document.getElementById('activeTokenSection');
+                const tokenContainer = document.getElementById('activeTokens');
+
+                if (!res.requests?.length) {
+                    container.innerHTML = '<div class="empty-state"><i class="fas fa-clipboard"></i><p>No requests yet</p></div>';
+                    tokenSection.style.display = 'none';
+                    return;
+                }
+
+                const activeTokens = res.requests.filter(r => r.token_active);
+                if (activeTokens.length > 0) {
+                    tokenSection.style.display = 'block';
+                    tokenContainer.innerHTML = activeTokens.map(r => `
+                        <div class="token-card glass-card-inner">
+                            <div class="token-info">
+                                <h4><i class="fas fa-key"></i> ${escapeHtml(r.project_name)}</h4>
+                                <span class="badge badge-success">Active</span>
+                                <span class="text-muted">Permissions: ${escapeHtml(r.requested_permissions)}</span>
+                            </div>
+                            <div class="token-countdown" data-expiry="${r.expiry_time}" id="countdown-${r.id}">
+                                <div class="countdown-ring">
+                                    <svg viewBox="0 0 100 100">
+                                        <circle cx="50" cy="50" r="45" class="countdown-bg"></circle>
+                                        <circle cx="50" cy="50" r="45" class="countdown-fill" id="ring-${r.id}"></circle>
+                                    </svg>
+                                    <span class="countdown-text" id="time-${r.id}">--:--</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-glass btn-sm" onclick="viewCredentials(${r.project_id})"><i class="fas fa-vault"></i> View Vault</button>
+                        </div>
+                    `).join('');
+                    startCountdowns(activeTokens);
+                } else {
+                    tokenSection.style.display = 'none';
+                }
+
+                container.innerHTML = res.requests.map(r => `
+                    <div class="request-card glass-card-inner">
+                        <div class="request-info">
+                            <h4>${escapeHtml(r.project_name)}</h4>
+                            <div class="request-meta">
+                                <span class="badge badge-${r.status}">${r.status}</span>
+                                <span class="risk-badge risk-${r.risk_level?.toLowerCase()}">${r.risk_level || 'N/A'} Risk (${r.risk_score})</span>
+                            </div>
+                            <p class="text-muted text-sm">${escapeHtml(r.risk_reason || '')}</p>
+                        </div>
+                        <div class="request-actions">
+                            ${r.status === 'approved' && !r.token_active ? `<button class="btn btn-primary btn-sm" onclick="requestExtension(${r.id})"><i class="fas fa-clock"></i> Request Extension</button>` : ''}
+                            <span class="text-muted text-sm">${formatDate(r.request_time)}</span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                document.getElementById('myRequestList').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Failed to load</p></div>';
+            }
+        }
+
+        // ── Countdown Timer ──
+        function startCountdowns(tokens) {
+            setInterval(() => {
+                tokens.forEach(t => {
+                    if (!t.expiry_time) return;
+                    const now = new Date();
+                    const expiry = new Date(t.expiry_time + 'Z');
+                    const diff = expiry - now;
+
+                    const timeEl = document.getElementById(`time-${t.id}`);
+                    const ringEl = document.getElementById(`ring-${t.id}`);
+                    if (!timeEl) return;
+
+                    if (diff <= 0) {
+                        timeEl.textContent = 'EXPIRED';
+                        timeEl.style.color = '#fc8181';
+                        if (ringEl) ringEl.style.strokeDashoffset = '283';
+                        return;
+                    }
+
+                    const mins = Math.floor(diff / 60000);
+                    const secs = Math.floor((diff % 60000) / 1000);
+                    timeEl.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+                    // Update ring
+                    const totalDuration = t.requested_duration * 60000;
+                    const progress = Math.max(0, diff / totalDuration);
+                    const circumference = 2 * Math.PI * 45; // ~283
+                    if (ringEl) {
+                        ringEl.style.strokeDasharray = circumference;
+                        ringEl.style.strokeDashoffset = circumference * (1 - progress);
+                    }
+
+                    // Color based on time remaining
+                    if (diff < 300000) { // < 5 min
+                        timeEl.style.color = '#fc8181';
+                    } else if (diff < 600000) { // < 10 min
+                        timeEl.style.color = '#f6ad55';
+                    } else {
+                        timeEl.style.color = '#68d391';
+                    }
+                });
+            }, 1000);
+        }
+
+        // ── Access Request Modal ──
+        function openRequestModal(projectId, projectName) {
+            document.getElementById('requestProjectId').value = projectId;
+            document.getElementById('requestProjectName').textContent = projectName;
+            document.getElementById('requestModal').classList.add('active');
+        }
+        function closeRequestModal() {
+            document.getElementById('requestModal').classList.remove('active');
+        }
+        function updateDurationLabel(val) {
+            document.getElementById('durationLabel').textContent = `${val} minutes`;
+        }
+
+        async function submitAccessRequest(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitRequestBtn');
+            const msg = document.getElementById('requestMsg');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+            try {
+                const res = await apiPost('/api/access-requests', {
+                    project_id: parseInt(document.getElementById('requestProjectId').value),
+                    requested_permissions: document.getElementById('requestPermissions').value,
+                    requested_duration: parseInt(document.getElementById('requestDuration').value),
+                    device_info: navigator.userAgent.substring(0, 200),
+                });
+                msg.textContent = `✓ Request submitted! Risk: ${res.request.risk_level} (${res.request.risk_score})`;
+                msg.style.color = '#48bb78';
+                setTimeout(() => { closeRequestModal(); loadMyRequests(); loadStats(); }, 1500);
+            } catch (err) {
+                msg.textContent = err.message || 'Failed to submit';
+                msg.style.color = '#fc8181';
+            }
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Request';
+        }
+
+        async function requestExtension(requestId) {
+            try {
+                await apiPost('/api/access-requests/request-extension', {
+                    request_id: requestId,
+                    additional_minutes: 30,
+                });
+                showToast('Extension request submitted!', 'success');
+                loadMyRequests();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function viewCredentials(projectId) {
+            const section = document.getElementById('credentialsSection');
+            const container = document.getElementById('credentialsList');
+            section.style.display = 'block';
+            container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+
+            try {
+                const res = await apiGet(`/api/credentials/${projectId}`);
+                if (!res.credentials?.length) {
+                    container.innerHTML = '<div class="empty-state"><i class="fas fa-vault"></i><p>No credentials stored</p></div>';
+                    return;
+                }
+                container.innerHTML = `
+                    <div class="access-type-badge">${res.access_type === 'restricted' ? '<span class="badge badge-denied"><i class="fas fa-lock"></i> Restricted — Active token required</span>' : `<span class="badge badge-success"><i class="fas fa-unlock"></i> Access: ${res.access_type}</span>`}</div>
+                    ${res.credentials.map(c => `
+                        <div class="credential-card glass-card-inner">
+                            <div class="cred-icon"><i class="fas fa-${getCredIcon(c.credential_type)}"></i></div>
+                            <div class="cred-info">
+                                <span class="cred-type">${escapeHtml(c.credential_type)}</span>
+                                <span class="cred-label">${escapeHtml(c.credential_label)}</span>
+                            </div>
+                            <code class="cred-value">${escapeHtml(c.value)}</code>
+                        </div>
+                    `).join('')}
+                `;
+            } catch (err) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Failed to load</p></div>';
+            }
+            section.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function closeCredentials() {
+            document.getElementById('credentialsSection').style.display = 'none';
+        }
+
+        function getCredIcon(type) {
+            const icons = { firebase: 'fire', github: 'code-branch', mail: 'envelope', api_key: 'key', default: 'lock' };
+            return icons[type] || icons.default;
+        }
+
+        // Init
+        loadDashboard();
+        setInterval(() => { loadStats(); loadMyRequests(); }, 30000); // Auto-refresh every 30s
+    </script>
+</body>
+
+</html>

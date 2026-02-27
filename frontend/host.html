@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Host Panel — Zero-Trust Vault</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/animations.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- ═══════════ NAV ═══════════ -->
+    <nav class="navbar glass-card">
+        <div class="nav-brand">
+            <i class="fas fa-shield-halved"></i>
+            <span>ZT Vault</span>
+        </div>
+        <div class="nav-links">
+            <a href="/dashboard" class="nav-link"><i class="fas fa-columns"></i> Dashboard</a>
+            <a href="/host" class="nav-link active"><i class="fas fa-crown"></i> Host Panel</a>
+        </div>
+        <div class="nav-right">
+            <span class="user-badge"><i class="fas fa-crown"></i> <span id="navUsername"></span></span>
+            <button class="theme-toggle" id="themeToggle" title="Toggle theme"><i class="fas fa-moon"></i></button>
+            <button class="btn btn-glass btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </nav>
+
+    <main class="dashboard-main">
+        <!-- Stats Row -->
+        <div class="stats-row animate-fade-up">
+            <div class="stat-card glass-card hover-lift">
+                <div class="stat-icon orange"><i class="fas fa-bell"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value" id="statPending">0</span>
+                    <span class="stat-label">Pending Requests</span>
+                </div>
+            </div>
+            <div class="stat-card glass-card hover-lift">
+                <div class="stat-icon green"><i class="fas fa-plug"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value" id="statActive">0</span>
+                    <span class="stat-label">Active Sessions</span>
+                </div>
+            </div>
+            <div class="stat-card glass-card hover-lift">
+                <div class="stat-icon blue"><i class="fas fa-project-diagram"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value" id="statProjects">0</span>
+                    <span class="stat-label">My Projects</span>
+                </div>
+            </div>
+            <div class="stat-card glass-card hover-lift">
+                <div class="stat-icon purple"><i class="fas fa-vault"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value" id="statCredentials">—</span>
+                    <span class="stat-label">Vault Items</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Project Section -->
+        <section class="section glass-card animate-fade-up delay-1">
+            <div class="section-header">
+                <h2><i class="fas fa-plus-circle"></i> Create New Project</h2>
+            </div>
+            <form class="inline-form" onsubmit="createProject(event)">
+                <input type="text" id="projectName" placeholder="Project name" required>
+                <input type="text" id="projectDesc" placeholder="Description (optional)">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Create</button>
+            </form>
+            <div class="form-message" id="createProjectMsg"></div>
+        </section>
+
+        <!-- My Projects List -->
+        <section class="section glass-card animate-fade-up delay-1">
+            <div class="section-header">
+                <h2><i class="fas fa-project-diagram"></i> My Projects</h2>
+                <button class="btn btn-glass btn-sm" onclick="loadMyProjects()"><i class="fas fa-sync-alt"></i></button>
+            </div>
+            <div id="myProjectsList">
+                <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+            </div>
+        </section>
+
+        <!-- Pending Requests -->
+        <section class="section glass-card animate-fade-up delay-2">
+            <div class="section-header">
+                <h2><i class="fas fa-bell"></i> Pending Access Requests</h2>
+                <button class="btn btn-glass btn-sm" onclick="loadPendingRequests()"><i
+                        class="fas fa-sync-alt"></i></button>
+            </div>
+            <div id="pendingRequestsList">
+                <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+            </div>
+        </section>
+
+        <!-- All Requests (History) -->
+        <section class="section glass-card animate-fade-up delay-2">
+            <div class="section-header">
+                <h2><i class="fas fa-history"></i> All Requests</h2>
+                <button class="btn btn-glass btn-sm" onclick="loadAllRequests()"><i
+                        class="fas fa-sync-alt"></i></button>
+            </div>
+            <div id="allRequestsList">
+                <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+            </div>
+        </section>
+
+        <!-- Activity Logs -->
+        <section class="section glass-card animate-fade-up delay-3">
+            <div class="section-header">
+                <h2><i class="fas fa-stream"></i> Activity Logs</h2>
+                <button class="btn btn-glass btn-sm" onclick="loadActivityLogs()"><i
+                        class="fas fa-sync-alt"></i></button>
+            </div>
+            <div class="activity-log-container" id="activityLogs">
+                <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+            </div>
+        </section>
+
+        <!-- Credential Vault Management -->
+        <section class="section glass-card animate-fade-up delay-3">
+            <div class="section-header">
+                <h2><i class="fas fa-vault"></i> Credential Vault</h2>
+            </div>
+            <form class="credential-form" onsubmit="addCredential(event)">
+                <select id="credProject" required>
+                    <option value="">Select project...</option>
+                </select>
+                <select id="credType" required>
+                    <option value="firebase">Firebase ID</option>
+                    <option value="github">GitHub Repo</option>
+                    <option value="mail">Mail ID</option>
+                    <option value="api_key">API Key</option>
+                </select>
+                <input type="text" id="credLabel" placeholder="Label (e.g. Production API)" required>
+                <input type="text" id="credValue" placeholder="Value" required>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add</button>
+            </form>
+            <div class="form-message" id="credMsg"></div>
+            <div id="credentialsList" style="margin-top: 1rem;"></div>
+        </section>
+    </main>
+
+    <!-- ═══════════ EXTEND / MODIFY MODAL ═══════════ -->
+    <div class="modal-overlay" id="extendModal">
+        <div class="modal glass-card animate-scale-in">
+            <button class="modal-close" onclick="closeExtendModal()"><i class="fas fa-times"></i></button>
+            <h3><i class="fas fa-clock"></i> Extend Access</h3>
+            <form onsubmit="submitExtension(event)">
+                <input type="hidden" id="extendRequestId">
+                <div class="form-group">
+                    <label>Additional Minutes</label>
+                    <input type="number" id="extendMinutes" min="1" max="120" value="30">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full"><i class="fas fa-clock"></i> Extend</button>
+                <div class="form-message" id="extendMsg"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ═══════════ PERMISSIONS MODAL ═══════════ -->
+    <div class="modal-overlay" id="permModal">
+        <div class="modal glass-card animate-scale-in">
+            <button class="modal-close" onclick="closePermModal()"><i class="fas fa-times"></i></button>
+            <h3><i class="fas fa-key"></i> Modify Permissions</h3>
+            <form onsubmit="submitPermUpdate(event)">
+                <input type="hidden" id="permRequestId">
+                <div class="form-group">
+                    <label>New Permissions</label>
+                    <select id="newPermissions">
+                        <option value="read">Read Only</option>
+                        <option value="read,write">Read & Write</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full"><i class="fas fa-save"></i> Update</button>
+                <div class="form-message" id="permMsg"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ═══════════ CHATBOT ═══════════ -->
+    <div class="chatbot-fab" id="chatbotFab" onclick="toggleChatbot()">
+        <i class="fas fa-robot"></i>
+    </div>
+    <div class="chatbot-panel glass-card" id="chatbotPanel">
+        <div class="chatbot-header">
+            <h4><i class="fas fa-robot"></i> Vault Assistant</h4>
+            <button onclick="toggleChatbot()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="chatbot-messages" id="chatMessages">
+            <div class="chat-msg bot">
+                <p>👋 How can I help you manage your projects?</p>
+            </div>
+        </div>
+        <form class="chatbot-input" onsubmit="sendChatMessage(event)">
+            <input type="text" id="chatInput" placeholder="Ask me anything..." autocomplete="off">
+            <button type="submit"><i class="fas fa-paper-plane"></i></button>
+        </form>
+    </div>
+
+    <script src="/static/theme.js"></script>
+    <script src="/static/app.js"></script>
+    <script>
+        // ── Auth Guard ──
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        if (!token || !user) { window.location.href = '/'; }
+        document.getElementById('navUsername').textContent = user?.username || '';
+
+        // ── Load All Data ──
+        async function loadHostDashboard() {
+            await Promise.all([
+                loadStats(), loadMyProjects(), loadPendingRequests(),
+                loadAllRequests(), loadActivityLogs()
+            ]);
+            populateProjectDropdown();
+        }
+
+        async function loadStats() {
+            try {
+                const res = await apiGet('/api/stats');
+                document.getElementById('statPending').textContent = res.pending_requests || 0;
+                document.getElementById('statActive').textContent = res.active_sessions || 0;
+                document.getElementById('statProjects').textContent = res.hosted_projects || 0;
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadMyProjects() {
+            try {
+                const res = await apiGet('/api/my-projects');
+                const container = document.getElementById('myProjectsList');
+                if (!res.projects?.length) {
+                    container.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><p>No projects yet. Create one above!</p></div>';
+                    return;
+                }
+                container.innerHTML = res.projects.map(p => `
+                    <div class="project-card glass-card-inner hover-lift">
+                        <div class="project-info">
+                            <h4><i class="fas fa-project-diagram"></i> ${escapeHtml(p.project_name)}</h4>
+                            <p class="text-muted">${escapeHtml(p.description || 'No description')}</p>
+                        </div>
+                        <div class="project-actions">
+                            <button class="btn btn-glass btn-sm" onclick="viewProjectCredentials(${p.id})"><i class="fas fa-vault"></i> Vault</button>
+                            <button class="btn btn-glass btn-sm" onclick="viewProjectLogs(${p.id})"><i class="fas fa-stream"></i> Logs</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                document.getElementById('myProjectsList').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Failed to load</p></div>';
+            }
+        }
+
+        async function loadPendingRequests() {
+            try {
+                const res = await apiGet('/api/access-requests/pending');
+                const container = document.getElementById('pendingRequestsList');
+                if (!res.requests?.length) {
+                    container.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><p>No pending requests!</p></div>';
+                    return;
+                }
+                container.innerHTML = res.requests.map(r => `
+                    <div class="request-card glass-card-inner request-pending">
+                        <div class="request-header">
+                            <div class="request-user-info">
+                                <h4><i class="fas fa-user"></i> ${escapeHtml(r.requester_username)}</h4>
+                                <span class="text-muted">→ ${escapeHtml(r.project_name)}</span>
+                            </div>
+                            <div class="risk-meter">
+                                <div class="risk-meter-bar">
+                                    <div class="risk-meter-fill risk-${r.risk_level?.toLowerCase()}" style="width: ${r.risk_score}%"></div>
+                                </div>
+                                <span class="risk-score-text risk-${r.risk_level?.toLowerCase()}">${r.risk_score} — ${r.risk_level}</span>
+                            </div>
+                        </div>
+                        <div class="request-details">
+                            <div class="detail-grid">
+                                <span><i class="fas fa-key"></i> ${escapeHtml(r.requested_permissions)}</span>
+                                <span><i class="fas fa-clock"></i> ${r.requested_duration} min</span>
+                                <span><i class="fas fa-network-wired"></i> ${escapeHtml(r.ip_address)}</span>
+                                <span><i class="fas fa-desktop"></i> ${escapeHtml((r.device_info || '').substring(0, 50))}...</span>
+                            </div>
+                            <p class="risk-explanation"><i class="fas fa-brain"></i> ${escapeHtml(r.risk_reason)}</p>
+                        </div>
+                        <div class="request-actions">
+                            <button class="btn btn-success btn-sm" onclick="decideRequest(${r.id}, 'approve')">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="decideRequest(${r.id}, 'deny')">
+                                <i class="fas fa-times"></i> Deny
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                document.getElementById('pendingRequestsList').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Failed to load</p></div>';
+            }
+        }
+
+        async function loadAllRequests() {
+            try {
+                const res = await apiGet('/api/access-requests/all');
+                const container = document.getElementById('allRequestsList');
+                if (!res.requests?.length) {
+                    container.innerHTML = '<div class="empty-state"><i class="fas fa-history"></i><p>No request history</p></div>';
+                    return;
+                }
+                container.innerHTML = res.requests.map(r => `
+                    <div class="request-card glass-card-inner compact">
+                        <div class="request-info">
+                            <span class="badge badge-${r.status}">${r.status}</span>
+                            <strong>${escapeHtml(r.requester_username)}</strong>
+                            <span class="text-muted">→ ${escapeHtml(r.project_name)}</span>
+                            <span class="risk-badge risk-${r.risk_level?.toLowerCase()}">${r.risk_score}</span>
+                        </div>
+                        <div class="request-actions">
+                            ${r.status === 'approved' && r.token_active ? `
+                                <button class="btn btn-danger btn-sm" onclick="decideRequest(${r.id}, 'terminate')"><i class="fas fa-ban"></i> Terminate</button>
+                                <button class="btn btn-glass btn-sm" onclick="openExtendModal(${r.id})"><i class="fas fa-clock"></i> Extend</button>
+                                <button class="btn btn-glass btn-sm" onclick="openPermModal(${r.id})"><i class="fas fa-key"></i> Modify</button>
+                            ` : ''}
+                            <span class="text-muted text-sm">${formatDate(r.request_time)}</span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                document.getElementById('allRequestsList').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Failed to load</p></div>';
+            }
+        }
+
+        async function loadActivityLogs() {
+            try {
+                const res = await apiGet('/api/activity-logs');
+                const container = document.getElementById('activityLogs');
+                if (!res.logs?.length) {
+                    container.innerHTML = '<div class="empty-state"><i class="fas fa-stream"></i><p>No activity logs yet</p></div>';
+                    return;
+                }
+                container.innerHTML = `
+                    <div class="log-table">
+                        <div class="log-header">
+                            <span>User</span><span>Project</span><span>Action</span><span>IP</span><span>Time</span>
+                        </div>
+                        ${res.logs.slice(0, 50).map(l => `
+                            <div class="log-row">
+                                <span>${escapeHtml(l.username)}</span>
+                                <span>${escapeHtml(l.project_name || 'N/A')}</span>
+                                <span>${escapeHtml(l.action)}</span>
+                                <span class="text-muted">${escapeHtml(l.ip_address)}</span>
+                                <span class="text-muted">${formatDate(l.timestamp)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } catch (e) {
+                document.getElementById('activityLogs').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Failed to load</p></div>';
+            }
+        }
+
+        // ── Create Project ──
+        async function createProject(e) {
+            e.preventDefault();
+            const msg = document.getElementById('createProjectMsg');
+            try {
+                await apiPost('/api/projects', {
+                    project_name: document.getElementById('projectName').value,
+                    description: document.getElementById('projectDesc').value,
+                });
+                msg.textContent = '✓ Project created!';
+                msg.style.color = '#48bb78';
+                document.getElementById('projectName').value = '';
+                document.getElementById('projectDesc').value = '';
+                loadMyProjects();
+                loadStats();
+                populateProjectDropdown();
+            } catch (err) {
+                msg.textContent = err.message;
+                msg.style.color = '#fc8181';
+            }
+        }
+
+        // ── Decision Actions ──
+        async function decideRequest(requestId, action) {
+            try {
+                await apiPost('/api/access-requests/decide', { request_id: requestId, action });
+                showToast(`Request ${action}d successfully!`, 'success');
+                loadPendingRequests();
+                loadAllRequests();
+                loadStats();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // ── Extension Modal ──
+        function openExtendModal(requestId) {
+            document.getElementById('extendRequestId').value = requestId;
+            document.getElementById('extendModal').classList.add('active');
+        }
+        function closeExtendModal() {
+            document.getElementById('extendModal').classList.remove('active');
+        }
+        async function submitExtension(e) {
+            e.preventDefault();
+            const msg = document.getElementById('extendMsg');
+            try {
+                await apiPost('/api/access-requests/extend', {
+                    request_id: parseInt(document.getElementById('extendRequestId').value),
+                    additional_minutes: parseInt(document.getElementById('extendMinutes').value),
+                });
+                msg.textContent = '✓ Access extended!';
+                msg.style.color = '#48bb78';
+                setTimeout(closeExtendModal, 1000);
+                loadAllRequests();
+            } catch (err) {
+                msg.textContent = err.message;
+                msg.style.color = '#fc8181';
+            }
+        }
+
+        // ── Permissions Modal ──
+        function openPermModal(requestId) {
+            document.getElementById('permRequestId').value = requestId;
+            document.getElementById('permModal').classList.add('active');
+        }
+        function closePermModal() {
+            document.getElementById('permModal').classList.remove('active');
+        }
+        async function submitPermUpdate(e) {
+            e.preventDefault();
+            const msg = document.getElementById('permMsg');
+            try {
+                await apiPost('/api/access-requests/update-permissions', {
+                    request_id: parseInt(document.getElementById('permRequestId').value),
+                    new_permissions: document.getElementById('newPermissions').value,
+                });
+                msg.textContent = '✓ Permissions updated!';
+                msg.style.color = '#48bb78';
+                setTimeout(closePermModal, 1000);
+                loadAllRequests();
+            } catch (err) {
+                msg.textContent = err.message;
+                msg.style.color = '#fc8181';
+            }
+        }
+
+        // ── Credential Management ──
+        async function populateProjectDropdown() {
+            try {
+                const res = await apiGet('/api/my-projects');
+                const sel = document.getElementById('credProject');
+                sel.innerHTML = '<option value="">Select project...</option>' +
+                    res.projects.map(p => `<option value="${p.id}">${escapeHtml(p.project_name)}</option>`).join('');
+            } catch (e) { }
+        }
+
+        async function addCredential(e) {
+            e.preventDefault();
+            const msg = document.getElementById('credMsg');
+            try {
+                await apiPost('/api/credentials', {
+                    project_id: parseInt(document.getElementById('credProject').value),
+                    credential_type: document.getElementById('credType').value,
+                    credential_label: document.getElementById('credLabel').value,
+                    value: document.getElementById('credValue').value,
+                });
+                msg.textContent = '✓ Credential added securely!';
+                msg.style.color = '#48bb78';
+                document.getElementById('credLabel').value = '';
+                document.getElementById('credValue').value = '';
+                viewProjectCredentials(parseInt(document.getElementById('credProject').value));
+            } catch (err) {
+                msg.textContent = err.message;
+                msg.style.color = '#fc8181';
+            }
+        }
+
+        async function viewProjectCredentials(projectId) {
+            const container = document.getElementById('credentialsList');
+            try {
+                const res = await apiGet(`/api/credentials/${projectId}`);
+                if (!res.credentials?.length) {
+                    container.innerHTML = '<div class="empty-state text-sm"><i class="fas fa-vault"></i> No credentials yet</div>';
+                    return;
+                }
+                container.innerHTML = res.credentials.map(c => `
+                    <div class="credential-card glass-card-inner">
+                        <div class="cred-icon"><i class="fas fa-${getCredIcon(c.credential_type)}"></i></div>
+                        <div class="cred-info">
+                            <span class="cred-type">${escapeHtml(c.credential_type)}</span>
+                            <span class="cred-label">${escapeHtml(c.credential_label)}</span>
+                        </div>
+                        <code class="cred-value">${escapeHtml(c.value)}</code>
+                        <button class="btn btn-danger btn-sm" onclick="deleteCredential(${c.id}, ${projectId})"><i class="fas fa-trash"></i></button>
+                    </div>
+                `).join('');
+            } catch (e) {
+                container.innerHTML = '<div class="empty-state text-sm"><i class="fas fa-exclamation-triangle"></i> Failed to load</div>';
+            }
+        }
+
+        async function deleteCredential(credId, projectId) {
+            if (!confirm('Delete this credential?')) return;
+            try {
+                await apiDelete(`/api/credentials/${credId}`);
+                showToast('Credential deleted', 'success');
+                viewProjectCredentials(projectId);
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function viewProjectLogs(projectId) {
+            const container = document.getElementById('activityLogs');
+            try {
+                const res = await apiGet(`/api/activity-logs/${projectId}`);
+                if (!res.logs?.length) {
+                    container.innerHTML = '<div class="empty-state"><i class="fas fa-stream"></i><p>No logs for this project</p></div>';
+                    return;
+                }
+                container.innerHTML = `
+                    <div class="log-table">
+                        <div class="log-header">
+                            <span>User</span><span>Action</span><span>IP</span><span>Time</span>
+                        </div>
+                        ${res.logs.map(l => `
+                            <div class="log-row">
+                                <span>${escapeHtml(l.username)}</span>
+                                <span>${escapeHtml(l.action)}</span>
+                                <span class="text-muted">${escapeHtml(l.ip_address)}</span>
+                                <span class="text-muted">${formatDate(l.timestamp)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                container.scrollIntoView({ behavior: 'smooth' });
+            } catch (e) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Failed to load</p></div>';
+            }
+        }
+
+        function getCredIcon(type) {
+            const icons = { firebase: 'fire', github: 'code-branch', mail: 'envelope', api_key: 'key' };
+            return icons[type] || 'lock';
+        }
+
+        // Init
+        loadHostDashboard();
+        setInterval(() => { loadStats(); loadPendingRequests(); loadAllRequests(); }, 15000);
+    </script>
+</body>
+
+</html>

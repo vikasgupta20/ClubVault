@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero-Trust Campus Club Vault</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/animations.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- ═══════════ PARTICLE BACKGROUND ═══════════ -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- ═══════════ THEME TOGGLE ═══════════ -->
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <!-- ═══════════ HERO SECTION ═══════════ -->
+    <section class="hero" id="heroSection">
+        <div class="hero-content animate-fade-up">
+            <div class="vault-icon-3d">
+                <div class="vault-ring ring-1"></div>
+                <div class="vault-ring ring-2"></div>
+                <div class="vault-ring ring-3"></div>
+                <i class="fas fa-shield-halved vault-center-icon"></i>
+            </div>
+            <h1 class="hero-title">
+                <span class="gradient-text">Zero-Trust</span> Campus Club Vault
+            </h1>
+            <p class="hero-subtitle">AI-powered secure collaboration for campus clubs. <br>Never trust, always verify.
+            </p>
+            <div class="hero-badges">
+                <span class="badge badge-glow"><i class="fas fa-brain"></i> AI Risk Scoring</span>
+                <span class="badge badge-glow"><i class="fas fa-clock"></i> Timed Access</span>
+                <span class="badge badge-glow"><i class="fas fa-lock"></i> Encrypted Vault</span>
+                <span class="badge badge-glow"><i class="fas fa-users"></i> Group Control</span>
+            </div>
+            <div class="hero-actions">
+                <button class="btn btn-primary btn-lg pulse-glow" onclick="showAuth('register')">
+                    <i class="fas fa-rocket"></i> Get Started
+                </button>
+                <button class="btn btn-glass btn-lg" onclick="showAuth('login')">
+                    <i class="fas fa-sign-in-alt"></i> Sign In
+                </button>
+            </div>
+        </div>
+
+        <!-- ═══════════ FEATURE CARDS ═══════════ -->
+        <div class="features-grid animate-fade-up delay-2">
+            <div class="feature-card glass-card hover-lift">
+                <div class="feature-icon-wrap"><i class="fas fa-brain"></i></div>
+                <h3>AI Risk Engine</h3>
+                <p>Gemini-powered risk analysis on every access request with real-time scoring.</p>
+            </div>
+            <div class="feature-card glass-card hover-lift">
+                <div class="feature-icon-wrap"><i class="fas fa-stopwatch"></i></div>
+                <h3>Timed Tokens</h3>
+                <p>Access expires automatically. Hosts control duration from 0 to 2 hours.</p>
+            </div>
+            <div class="feature-card glass-card hover-lift">
+                <div class="feature-icon-wrap"><i class="fas fa-vault"></i></div>
+                <h3>Encrypted Vault</h3>
+                <p>Store API keys, Firebase IDs, and more — all Fernet-encrypted at rest.</p>
+            </div>
+            <div class="feature-card glass-card hover-lift">
+                <div class="feature-icon-wrap"><i class="fas fa-eye"></i></div>
+                <h3>Misuse Detection</h3>
+                <p>Automatic account freezing and host notification on suspicious behavior.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ AUTH MODAL ═══════════ -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal glass-card animate-scale-in">
+            <button class="modal-close" onclick="closeAuth()"><i class="fas fa-times"></i></button>
+
+            <!-- Tab Switch -->
+            <div class="auth-tabs">
+                <button class="tab-btn active" id="loginTab" onclick="switchTab('login')">Sign In</button>
+                <button class="tab-btn" id="registerTab" onclick="switchTab('register')">Register</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Username</label>
+                    <input type="text" id="loginUsername" required minlength="3" placeholder="Enter username"
+                        autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="loginPassword" required minlength="6" placeholder="Enter password"
+                        autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i> Sign In
+                </button>
+                <div class="form-message" id="loginMsg"></div>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" class="auth-form hidden" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Username</label>
+                    <input type="text" id="regUsername" required minlength="3" placeholder="Choose username"
+                        autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="regEmail" required placeholder="your@email.com" autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="regPassword" required minlength="6" placeholder="Min 6 characters"
+                        autocomplete="new-password">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-user-tag"></i> Role</label>
+                    <select id="regRole">
+                        <option value="user">User — Request access to projects</option>
+                        <option value="host">Host — Create & manage projects</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full" id="regBtn">
+                    <i class="fas fa-rocket"></i> Create Account
+                </button>
+                <div class="form-message" id="regMsg"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ═══════════ CHATBOT WIDGET ═══════════ -->
+    <div class="chatbot-fab" id="chatbotFab" onclick="toggleChatbot()">
+        <i class="fas fa-robot"></i>
+    </div>
+    <div class="chatbot-panel glass-card" id="chatbotPanel">
+        <div class="chatbot-header">
+            <h4><i class="fas fa-robot"></i> Vault Assistant</h4>
+            <button onclick="toggleChatbot()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="chatbot-messages" id="chatMessages">
+            <div class="chat-msg bot">
+                <p>👋 Hi! I'm the Vault Assistant. Ask me anything about the platform!</p>
+            </div>
+        </div>
+        <form class="chatbot-input" onsubmit="sendChatMessage(event)">
+            <input type="text" id="chatInput" placeholder="Type a question..." autocomplete="off">
+            <button type="submit"><i class="fas fa-paper-plane"></i></button>
+        </form>
+    </div>
+
+    <script src="/static/theme.js"></script>
+    <script src="/static/app.js"></script>
+    <script>
+        // Particle canvas animation
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+                this.speedY = (Math.random() - 0.5) * 0.5;
+                this.opacity = Math.random() * 0.5 + 0.1;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+            }
+            draw() {
+                const theme = document.documentElement.getAttribute('data-theme');
+                const color = theme === 'dark' ? `rgba(99, 179, 237, ${this.opacity})` : `rgba(66, 99, 235, ${this.opacity})`;
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+
+            // Draw connections
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 120) {
+                        const theme = document.documentElement.getAttribute('data-theme');
+                        const color = theme === 'dark' ? '99, 179, 237' : '66, 99, 235';
+                        ctx.strokeStyle = `rgba(${color}, ${0.1 * (1 - dist / 120)})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        // Auth modal functions
+        function showAuth(tab) {
+            document.getElementById('authModal').classList.add('active');
+            switchTab(tab);
+        }
+        function closeAuth() {
+            document.getElementById('authModal').classList.remove('active');
+        }
+        function switchTab(tab) {
+            document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+            document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
+            document.getElementById('loginTab').classList.toggle('active', tab === 'login');
+            document.getElementById('registerTab').classList.toggle('active', tab === 'register');
+        }
+
+        // Auth handlers
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            const msg = document.getElementById('loginMsg');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+            msg.textContent = '';
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: document.getElementById('loginUsername').value,
+                        password: document.getElementById('loginPassword').value,
+                    }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    msg.textContent = '✓ Login successful!';
+                    msg.style.color = '#48bb78';
+                    setTimeout(() => {
+                        window.location.href = data.user.role === 'host' ? '/host' : '/dashboard';
+                    }, 500);
+                } else {
+                    msg.textContent = data.detail || 'Login failed';
+                    msg.style.color = '#fc8181';
+                }
+            } catch (err) {
+                msg.textContent = 'Network error';
+                msg.style.color = '#fc8181';
+            }
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const btn = document.getElementById('regBtn');
+            const msg = document.getElementById('regMsg');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
+            msg.textContent = '';
+
+            try {
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: document.getElementById('regUsername').value,
+                        email: document.getElementById('regEmail').value,
+                        password: document.getElementById('regPassword').value,
+                        role: document.getElementById('regRole').value,
+                    }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    msg.textContent = '✓ Account created!';
+                    msg.style.color = '#48bb78';
+                    setTimeout(() => {
+                        window.location.href = data.user.role === 'host' ? '/host' : '/dashboard';
+                    }, 500);
+                } else {
+                    msg.textContent = data.detail || 'Registration failed';
+                    msg.style.color = '#fc8181';
+                }
+            } catch (err) {
+                msg.textContent = 'Network error';
+                msg.style.color = '#fc8181';
+            }
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-rocket"></i> Create Account';
+        }
+
+        // Check if already logged in
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        if (token && user) {
+            window.location.href = user.role === 'host' ? '/host' : '/dashboard';
+        }
+    </script>
+</body>
+
+</html>

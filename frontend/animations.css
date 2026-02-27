@@ -1,0 +1,400 @@
+/* ══════════════════════════════════════════════════════════
+   animations.css — Zero-Trust Campus Club Vault
+   Phase 9: Smooth Transitions, 3D Effects, Micro-interactions
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Entrance Animations ──────────────────────────────── */
+.animate-fade-up {
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeUp 0.8s ease forwards;
+}
+
+.delay-1 {
+    animation-delay: 0.15s;
+}
+
+.delay-2 {
+    animation-delay: 0.3s;
+}
+
+.delay-3 {
+    animation-delay: 0.45s;
+}
+
+.delay-4 {
+    animation-delay: 0.6s;
+}
+
+@keyframes fadeUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-scale-in {
+    animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes scaleIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.85);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* ── Gradient Shift (Hero Title) ──────────────────────── */
+@keyframes gradientShift {
+
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+/* ── 3D Ring Rotation (Vault Icon) ────────────────────── */
+@keyframes ringRotate {
+    0% {
+        transform: rotateX(60deg) rotateZ(0deg);
+    }
+
+    100% {
+        transform: rotateX(60deg) rotateZ(360deg);
+    }
+}
+
+/* ── Pulse Glow (Primary CTA) ─────────────────────────── */
+@keyframes pulseGlow {
+
+    0%,
+    100% {
+        box-shadow: 0 4px 15px rgba(var(--accent-rgb), 0.4);
+    }
+
+    50% {
+        box-shadow: 0 4px 30px rgba(var(--accent-rgb), 0.7), 0 0 60px rgba(var(--accent-rgb), 0.2);
+    }
+}
+
+/* ── Badge Glow ───────────────────────────────────────── */
+@keyframes badgeGlow {
+    0% {
+        box-shadow: 0 0 5px rgba(var(--accent-rgb), 0.1);
+    }
+
+    100% {
+        box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.3), 0 0 30px rgba(var(--accent-rgb), 0.1);
+    }
+}
+
+/* ── Toast Slide In ───────────────────────────────────── */
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
+
+/* ── Spinner / Loading ────────────────────────────────── */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.fa-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* ── Shimmer Effect (Loading Placeholder) ─────────────── */
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.skeleton {
+    background: linear-gradient(90deg,
+            var(--bg-card-inner) 25%,
+            rgba(var(--accent-rgb), 0.05) 37%,
+            var(--bg-card-inner) 63%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    border-radius: var(--radius-sm);
+}
+
+/* ── Floating Animation ───────────────────────────────── */
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+.float-animation {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* ── Risk Meter Fill Animation ────────────────────────── */
+.risk-meter-fill {
+    animation: meterFill 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes meterFill {
+    from {
+        width: 0;
+    }
+}
+
+/* ── Card Hover 3D Tilt ───────────────────────────────── */
+.feature-card {
+    transform-style: preserve-3d;
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.feature-card:hover {
+    transform: perspective(800px) rotateX(2deg) rotateY(-2deg) translateY(-4px);
+    box-shadow: var(--shadow-lg), 0 0 40px rgba(var(--accent-rgb), 0.08);
+}
+
+/* ── Glass Card Subtle Hover Glow ─────────────────────── */
+.glass-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.glass-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(var(--accent-rgb), 0.03) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+}
+
+.glass-card:hover::after {
+    opacity: 1;
+}
+
+/* ── Countdown Ring Pulse ─────────────────────────────── */
+@keyframes countdownPulse {
+
+    0%,
+    100% {
+        filter: drop-shadow(0 0 4px rgba(72, 187, 120, 0.3));
+    }
+
+    50% {
+        filter: drop-shadow(0 0 12px rgba(72, 187, 120, 0.6));
+    }
+}
+
+.countdown-ring svg {
+    animation: countdownPulse 2s ease-in-out infinite;
+}
+
+/* ── Chatbot FAB Bounce ───────────────────────────────── */
+@keyframes fabBounce {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.chatbot-fab {
+    animation: fabBounce 3s ease-in-out infinite;
+}
+
+.chatbot-fab:hover {
+    animation: none;
+}
+
+/* ── Modal Overlay Fade ───────────────────────────────── */
+.modal-overlay {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* ── Stat Value Count Animation ───────────────────────── */
+.stat-value {
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover .stat-value {
+    transform: scale(1.1);
+}
+
+/* ── Page Transition ──────────────────────────────────── */
+body {
+    animation: pageIn 0.5s ease;
+}
+
+@keyframes pageIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ── Button Ripple Effect ─────────────────────────────── */
+.btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    top: 50%;
+    left: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.5s, height 0.5s, opacity 0.5s;
+    pointer-events: none;
+    opacity: 0;
+}
+
+.btn:active::after {
+    width: 300px;
+    height: 300px;
+    opacity: 0;
+    transition: 0s;
+}
+
+/* ── Typewriter Cursor (Chatbot) ──────────────────────── */
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+}
+
+.typing-indicator::after {
+    content: '▌';
+    animation: blink 0.8s infinite;
+    color: var(--accent);
+}
+
+/* ── Stagger Children Animation ───────────────────────── */
+.stagger>* {
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards;
+}
+
+.stagger>*:nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+.stagger>*:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.stagger>*:nth-child(3) {
+    animation-delay: 0.15s;
+}
+
+.stagger>*:nth-child(4) {
+    animation-delay: 0.2s;
+}
+
+.stagger>*:nth-child(5) {
+    animation-delay: 0.25s;
+}
+
+.stagger>*:nth-child(6) {
+    animation-delay: 0.3s;
+}
+
+.stagger>*:nth-child(7) {
+    animation-delay: 0.35s;
+}
+
+.stagger>*:nth-child(8) {
+    animation-delay: 0.4s;
+}
+
+/* ── Smooth Theme Transition ──────────────────────────── */
+html[data-theme] * {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* ── Reduce Motion (Accessibility) ────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
